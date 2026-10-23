@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+*/dist/
+release/
+*/release/
+build-artifacts/
+*.ipa
+
+# Logs & Runtime
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Capacitor / iOS builds
+mobile/ios/App/build/
+mobile/ios/App/Pods/
+mobile/ios/App/Podfile.lock
+mobile/ios/App/DerivedData/

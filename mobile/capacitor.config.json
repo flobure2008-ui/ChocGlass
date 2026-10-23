@@ -1,0 +1,23 @@
+{
+  "appId": "com.chocglass.app",
+  "appName": "ChocGlass",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0d0f17",
+    "preferredContentMode": "mobile",
+    "scheme": "ChocGlass"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1000,
+      "backgroundColor": "#0d0f17",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}

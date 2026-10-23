@@ -1,0 +1,87 @@
+name: Build iOS IPA (ChocGlass)
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    name: Build & Package iOS IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install Mobile Dependencies
+        run: |
+          cd mobile
+          npm ci
+
+      - name: Build Web Production Bundle
+        run: |
+          cd mobile
+          npm run build
+
+      - name: Sync Capacitor iOS
+        run: |
+          cd mobile
+          npx cap sync ios
+
+      - name: Setup CocoaPods
+        run: |
+          cd mobile/ios/App
+          pod install
+
+      - name: Build Xcode Archive / App (Unsigned for Sideloading)
+        run: |
+          cd mobile/ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            clean build
+
+      - name: Package into IPA (Payload Archive)
+        run: |
+          cd mobile/ios/App
+          mkdir -p Payload
+          # Find the built .app product
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
+          zip -r -q ChocGlass.ipa Payload
+          mkdir -p ../../../build-artifacts
+          mv ChocGlass.ipa ../../../build-artifacts/
+          echo "IPA packaging complete!"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChocGlass-iOS-IPA
+          path: build-artifacts/ChocGlass.ipa
+          retention-days: 14
+
+      - name: Publish to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build-artifacts/ChocGlass.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
