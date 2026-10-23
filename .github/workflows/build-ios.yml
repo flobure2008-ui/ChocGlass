@@ -9,10 +9,15 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-ipa:
     name: Build & Package iOS IPA
     runs-on: macos-14
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
@@ -62,7 +67,6 @@ jobs:
         run: |
           cd mobile/ios/App
           mkdir -p Payload
-          # Find the built .app product
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" | head -n 1)
           echo "Found compiled app at: $APP_PATH"
           cp -r "$APP_PATH" Payload/
@@ -80,6 +84,7 @@ jobs:
 
       - name: Publish to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           files: build-artifacts/ChocGlass.ipa
